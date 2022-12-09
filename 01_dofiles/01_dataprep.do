@@ -33,11 +33,20 @@ use "$dpath\defactopopn_10%_20221011d.dta" /*if _n<1000*/, clear
 		lab var head_nat "Head is Ghanaian"
 		
 	//Generate head education
-	gen educ4 = 0 if p12b<=3 & (p12c<6 | p12c==.)
-	replace educ4 = 1 if (p12b==3 & p12c==6) | (p12b>3 & p12b<6) | (p12b==6 & p12c<3) | (p12b==7 & p12c<6)
-	replace educ4 = 2 if (p12b==6 & (inlist(p12c,3,4))) | (p12b==7 & inlist(p12c,6,7)) | (inlist(p12b,8))
-	egen head_edu = max(((a11c==1)*))
-	
+	gen educ4 = 1 if (p12b<=3 & (p12c<6 | p12c==.)) | p12a==1 | p12b==16  //none or less than primary
+	replace educ4 = 2 if (p12b==3 & p12c==6) | (p12b==4 & p12c<3) | (p12b==5 & p12c<4) | (p12b==7 & p12c<5)   //Primary completed - Note that secondary could either be 5 or 7 depending on when they finished
+	replace educ4 = 3 if (p12b==4 & p12c==3) | (p12b==5 & p12c<=4) | (p12b==6 & p12c<4) //JHS | middle
+	replace educ4 = 4 if (p12b==6 & p12c==4) | (p12b==7 & inrange(p12c, 5,7)) | inrange(p12b,11,15) | inrange(p12b,8,10) //SHS completed or higher 
+lab var educ4 "Education levels"
+lab def educ 1 "None or less than primary" 2 "Primary completed" 3 "JHS or middle completed" 4 "SHS completed or higher"
+
+	egen head_edu = max(((a11c==1)*educ4)), by(nqid)
+		lab var head_edu "Head's education level"
+		lab val head_edu educ
+	egen max_edu  = max(((p02>15)*educ4)), by(nqid)
+		lab var max_edu "Max education for age>15 in the HH"
+		lab val max_edu educ
+		
 	//Generate number of women in the household
 	egen num_female= sum((a11d==2)), by(nqid)
 		lab var num_female "number of women in the household"
