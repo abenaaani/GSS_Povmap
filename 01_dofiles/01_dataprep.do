@@ -47,6 +47,9 @@ lab def educ 1 "None or less than primary" 2 "Primary completed" 3 "JHS or middl
 		lab var max_edu "Max education for age>15 in the HH"
 		lab val max_edu educ
 		
+	//Religion
+	recode p09 (8=1) (1 2 3 4 = 2) (5 = 3) (7 9 = 4)
+		
 	//Generate number of women in the household
 	egen num_female= sum((a11d==2)), by(nqid)
 		lab var num_female "number of women in the household"
@@ -117,3 +120,4 @@ lab def educ 1 "None or less than primary" 2 "Primary completed" 3 "JHS or middl
 	gen improved_toilet = inlist(s03, 2,3)
 	//gen improved_toilet = inlist(s03, 2,3,4,5,6)
 	lab var improved_toilet "KVIP,VIP and Pit latrine"
+	
