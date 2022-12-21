@@ -11,7 +11,7 @@ set more off
 clear all
 
 if (lower("`c(username)'")=="wb378870"){
-	global dpath "C:\Users\WB378870\OneDrive - WBG\000.EAWVP\0.Ghana\0.Data\9.Census_2010"
+	global dpath "C:\Users\WB378870\OneDrive - WBG\000.EAWVP\0.Ghana\0.Data\10.Census_2021"
 } 
 use "$dpath\defactopopn_10%_20221011d.dta" /*if _n<1000*/, clear
 
@@ -125,8 +125,7 @@ lab def educ 1 "None or less than primary" 2 "Primary completed" 3 "JHS or middl
 tab econact if a11c==1, gen(head_employed)
 
 *Proportion of household members employed
-g employed = (econact==1)
-bys nqid: egen employedp = mean(employed) 
+bys nqid: egen employedp = mean((econact==1)) 
 label var employedp "Proportion of household members employed"
 
 *Occupation of the household head
