@@ -79,7 +79,7 @@ lab def educ 1 "None or less than primary" 2 "Primary completed" 3 "JHS or middl
 	gen floor_tiles=inrange(h04, 6,8)
 	gen floor_other=inlist(h04,1,3,4,5,9)
 	
-		lab var floor_cement "Floor type is cemenet"
+		lab var floor_cement "Floor type is cement"
 		lab var floor_tiles  "Floor type is tiles"
 		lab var floor_other  "Floor type is not cement or tiles"
 	
@@ -120,4 +120,89 @@ lab def educ 1 "None or less than primary" 2 "Primary completed" 3 "JHS or middl
 	gen improved_toilet = inlist(s03, 2,3)
 	//gen improved_toilet = inlist(s03, 2,3,4,5,6)
 	lab var improved_toilet "KVIP,VIP and Pit latrine"
+
+*Labor market status of the household head
+tab econact if a11c==1, gen(head_employed)
+
+*Proportion of household members employed
+g employed = (econact==1)
+bys nqid: egen employedp = mean(employed) 
+label var employedp "Proportion of household members employed"
+
+*Occupation of the household head
+recode p14b1 (0 = 10), gen(occupation)
+replace occupation = 0 if inlist(econact,2,3)
+label define occupation 0 "Notworking" 1 "Legislators/managers" 2 "Professionals" 3 "Technicians and associate professionals" ///
+						4 "Clerical support workers" 5 "Service/sales workers" 6 "Skilled agric/fishery workers" 7 "Craft and related trades workers" ///
+						8 "Plant machine operators and assemblers" 9 "Elementary occupations" 10 "Other Occupations"
+label values occupation occupation
+g head_occ = occupation if a11c==1
+label values head_occ occupation
+label var occupation "Occupation of household head"
+
+tab head_occ, gen(head_occ)
+*
+*Employment status of the household head
+g head_empstatus = p16 if a11c==1
+replace head_empstatus = 0 if p16==. & a11c==1
+label define empstatus 0 "Notworking" 1 "Employee" 2 "Self employed without employees" 3 "Self employed with employees" ///
+					   4 "Casual worker" 5 "Contributing family worker" 6 "Paid apprentice" 7 "Unpaid apprentice" 8 "Domestic employee (househelp)" 9 "Other"
+label values head_empstatus empstatus
+tab head_empstatus, gen(head_empstatus)
+
+*Proportion of household members who are paid employees
+*only employees
+g employee = (p16==1)
+replace employee = . if p16==.
+bys nqid: egen employeep = mean(employee)
+label var employeep "Proportion of household members who are paid employees"					   
+
+*all paid workers - employees, paid apprentices, casual workers
+g employeew = (inlist(p16,1,4,6))
+replace employeew = . if p16==.
+bys nqid: egen employeewp = mean(employeew)
+label var employeewp "Proportion of household members who are paid workers"					   
+
+
+*Employment sector of the household head
+g head_empsector = p17 if a11c==1
+replace head_empsector = 0 if p17==. & a11c==1
+replace head_empsector = 5 if inrange(p17,5,9) & a11c==1
+label define empsector 0 "Notworking" 1 "Public" 2 "Semi-Public/Parastatal" 3 "Private formal" ///
+					   4 "Private Informal" 5 "NGO(Local/Int/Religious)" 
+label values head_empsector empsector
+tab head_empsector, gen(head_empsector)
+
+*Industry of the household head
+replace p15b1 = 0 if inlist(econact,2,3)
+recode p15b1 (1=1) (2/6=2) (7/21=3),gen(industry)
+label define industry 0 "Notworking" 1 "Agriculture" 2 "Industrial" 3 "Services" 
+label values industry industry
+g head_indus = industry if a11c==1
+label values head_indus industry
+label var industry "industrial sector of household head"
+
+tab head_indus, gen(head_indus)
+
+*
+*Any disabled household member?
+gen disability=0 if p18a==1 & p18b==1 & p18c==1 & p18d==1 & p18e==1 & p18f==1
+replace disability = 1 if disability==. & p02>=5
+bys nqid: egen anydisabled = max(disability)
+
+*Proportion of household members disabled
+bys nqid: egen disabledp = mean(disability)
+label var disabledp "Proportion of household members disabled"					   
+
+
+******************
+*yet to add if there is an Orphan in hh
+
+
+
+
+
+
 	
+	
+
