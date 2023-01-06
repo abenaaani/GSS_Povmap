@@ -12,7 +12,10 @@ clear all
 
 if (lower("`c(username)'")=="wb378870"){
 	global dpath "C:\Users\WB378870\OneDrive - WBG\000.EAWVP\0.Ghana\0.Data\10.Census_2021"
-} 
+}
+if (lower("`c(username)'")=="jacqueline anum"){
+	global dpath  "C:\2021PHC\tabulation\"
+}
 use "$dpath\defactopopn_10%_20221011d.dta" /*if _n<1000*/, clear
 
 	//We keep only households
@@ -195,8 +198,32 @@ label var disabledp "Proportion of household members disabled"
 
 
 ******************
-*yet to add if there is an Orphan in hh
+*Any orphan household member?
+gen orphanhood=1 if a11f==1 & a11g==1 & inrange(p02,0,17)
+replace orphanhood = 0 if orphanhood==. 
+bys nqid: egen orphaned = max(orphanhood)
 
+*Does any member of the household own mobile phone
+gen mobile_phone=1 if p19aa==1|p19ab==1|p19ac==1  //includes a tablet
+replace mobile_phone=0 if mobile_phone==.
+bys nqid: egen mobileown = max(mobile_phone)
+label var mobileown "1 = Any member of the household owns a mobile phone, 0 otherwise"
+
+
+*Does any member of the household use internet facility
+gen internet=1 if (p19ca==1|p19cb==1|p19cc==1|p19cd==1|p19ce==1|p19cf==1) & p02>=6 
+replace internet=0 if internet==.
+bys nqid: egen internetuse = min(internet)
+replace internetuse = 2 - internetuse
+
+bys nqid: egen internetuse = max(internet)
+label var internetuse "1 = Any member of the household uses internet, 0 otherwise"
+
+
+
+
+	
+	
 
 
 
