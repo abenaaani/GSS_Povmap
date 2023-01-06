@@ -195,8 +195,28 @@ label var disabledp "Proportion of household members disabled"
 
 
 ******************
-*yet to add if there is an Orphan in hh
+*Any orphan household member?
+gen orphanhood=1 if a11f==1 & a11g==1 & inrange(p02,0,17)
+replace orphanhood = 0 if orphanhood==. 
+bys nqid: egen orphaned = max(orphanhood)
 
+*Does any member of the household own mobile phone
+gen mobile_phone=1 if p19aa==1|p19ab==1|p19ac==1  //includes a tablet
+replace mobile_phone=0 if mobile_phone==.
+bys nqid: egen mobileown = max(mobile_phone)
+label var mobileown "1 = Any member of the household owns a mobile phone, 0 otherwise"
+
+
+*Does any member of the household use internet facility
+bys seqnum: egen internetuse = min(internet)
+replace internetuse = 2 - internetuse
+label var internetuse "1 = Any member of the household uses internet, 0 otherwise"
+
+
+
+
+	
+	
 
 
 
