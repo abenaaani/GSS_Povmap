@@ -1,7 +1,16 @@
 set more off
 clear all
 //do file to prepare census data for poverty mapping
-use "C:\Users\CHARLES K. AGBENU\Desktop\CENSUS REPORT\10%2021PHC_20220828d\defactopopn_10%_20220828d.dta" /*if _n<1000*/, clear
+set more off
+clear all
+
+if (lower("`c(username)'")=="wb378870"){
+	global dpath "C:\Users\WB378870\OneDrive - WBG\000.EAWVP\0.Ghana\0.Data\10.Census_2021"
+}
+if (lower("`c(username)'")=="jacqueline anum"){
+	global dpath  "C:\2021PHC\tabulation\"
+}
+use "$dpath\defactopopn_10%_20221011d.dta" /*if _n<1000*/, clear
 
 	//We keep only households
 	keep if restype==1
