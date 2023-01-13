@@ -1,0 +1,4 @@
+-> File to prepare the GLSS7 for analysis is:
+	- 02_dataprep_survey.do
+-> File to prepare the Census for analysis is:
+	- 01_dataprep_census.do
