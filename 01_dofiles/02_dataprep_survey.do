@@ -14,16 +14,20 @@ if (lower("`c(username)'")=="wb378870"){
 //use "$dpath\defactopopn_10%_20221011d.dta" /*if _n<1000*/, clear
 if (lower("`c(username)'")=="tony"){
 	global glss "C:\Users\Tony\F-paper Dropbox\Anthony Krakah\PC\Desktop\OFFICE DESKTOP OLD\GLSS7\glss7data\data\glss7stata\g7PartA_1"
+	
+	global glssagg "C:\Users\Tony\F-paper Dropbox\Anthony Krakah\PC\Desktop\OFFICE DESKTOP OLD\GLSS7\glss7data\data\glss7stata\g7aggregates_1"
+	
+	global outdata "$glss"
 }
 if (lower("`c(username)'")=="wb378870"){
-	global glss "C:\Users\WB378870\OneDrive - WBG\000.EAWVP\0.Ghana\0.Dat"C:\Users\Tony\F-paper Dropbox\Anthony Krakah\PC\Desktop\OFFICE DESKTOP OLD\GLSS7\glss7da
-> ta\data\glss7stata\g7PartA_1\g7sec5c.dta"
-a\10.Census_2021"
+	global main      "C:\Users\WB378870\OneDrive - WBG\000.EAWVP\0.Ghana\"
+	global ghanadata "$main\0.Data\0.GLSS\GLSS-VII from GSS\"
+	global glss      "$ghanadata\g7stata\g7PartA\"
+	global glssagg   "$ghanadata\g7stata\g7aggregates\"
+	global outdata   "$main\6.SAE\1.data\"
 } 
  
-if (lower("`c(username)'")=="tony"){
-	global glssagg "C:\Users\Tony\F-paper Dropbox\Anthony Krakah\PC\Desktop\OFFICE DESKTOP OLD\GLSS7\glss7data\data\glss7stata\g7aggregates_1"
-}
+
 *=======================================
 *Prepare survey data for poverty mapping
 *=======================================
@@ -191,6 +195,17 @@ tab schlvl if hhead==1, gen(head_schlvl)
 
 *Section 4 (Employment and occupation)
 *=====================================
+gen employed = .
+foreach i in 2 4 6 9 12 15 17 19 22 23 25 27 28 29 30{ //check questionnaire!
+	if (`i'==17|`i'==29) replace employed = 1 if inlist(s4aq`i',1,2,3)
+	else if (`i'==15) replace employed = 1 if inlist(s4aq`i', 1,2)
+	if (`i'!=17) replace employed = 1 if s4aq`i'==1
+}
+replace employed = 1 if s4aq21==1 | s4aq31==1
+//Unemployed
+replace employed = 2 if s4eq1==1
+replace employed = 3 if s4eq1==2 | s2aq5==1
+
 
 ***NOT CLEAR HOW THIS WAS GENERATED
 
@@ -210,12 +225,25 @@ g head_employed = employed if hhead==1
 label define employment 1 "Employed" 2 "Unemployed" 3 "Inactive"
 label val head_employed employment
 tab head_employed, gen(head_employed)
-
+*/
 *Proportion of household members employed
 g employed_ = (employed==1)
 bys hid: egen employedp = mean(employed_)
-label var employedp "Proportion of household members employed"
-*/
+label var employedp "Proportion of household members employed" //Ideally change this to share of ADULTS employed
+//Head employment status
+g head_employed = employed if hhead==1
+label define employment 1 "Employed" 2 "Unemployed" 3 "Inactive"
+label val head_employed employment
+tab head_employed, gen(head_employed)
+
+
+// Occupation is a bit different in the GLSS7
+clonevar occupation = s4aq33b
+egen head_occ = max(occupation *(hhead==1)), by(hid)
+	lab val head_occ `:val lab occupation'
+	
+tab head_occ, gen(head_occ)
+/*
 *Major occupation categories
 recode s4aq6 (110/310=10) (1111/1439 =1) (2111/2659=2) (3111/3522=3) (4110/4419=4) (5111/5419=5) (6111/6340=6) (7111/7549=7) (8111/8350=8) (9111/9629=9), gen(occupation)
 replace occupation = 0 if employed==2|employed==3
@@ -225,8 +253,19 @@ label define occupation 0 "Unemployed" 1 "Legislators/managers" 2 "Professionals
 						8 "Plant machine operators and assemblers" 9 "Elementary occupations" 10 "Other Occupations"
 label values head_occ occupation
 tab head_occ, gen(head_occ)
-
+*/
 *Employment status of the household head
+recode s4aq36 (1=1) (6 9 = 2) (5 8=3) (2=4) (7 10=5) (3 4=6) (11=7) (12=8), gen(empstatus)
+
+g head_empstatus = empstatus if hhead==1
+label define empstatus 0 "Unemployed/Inactive" 1 "Employee" 2 "Self employed without employees" 3 "Self employed with employees" ///
+					   4 "Casual worker" 5 "Contributing family worker" 6 "Apprentice" 7 "Domestic employee (househelp)" 8 "Other"
+label values head_empstatus empstatus
+tab head_empstatus, gen(head_empstatus)
+
+
+/*
+
 recode s4aq20 (1 = 1) (3 6 = 2) (2 5 = 3) (4 7 = 5) (8 = 7) (9 = 4) (10 = 6) (11 = 8), gen(empstatus)
 replace empstatus = 0 if (s4aq1==2 & s4aq2==2 & s4aq3==2)
 g head_empstatus = empstatus if hhead==1
@@ -234,11 +273,16 @@ label define empstatus 0 "Unemployed/Inactive" 1 "Employee" 2 "Self employed wit
 					   4 "Casual worker" 5 "Contributing family worker" 6 "Apprentice" 7 "Domestic employee (househelp)" 8 "Other"
 label values head_empstatus empstatus
 tab head_empstatus, gen(head_empstatus)
-
+*/
 *Proportion of household members who are paid employees
 g employee = (empstatus==1)
 bys hid: egen employeep = mean(employee)
-label var employeep "Proportion of household members who are paid employees"					   
+label var employeep "Proportion of household members who are paid employees"
+
+keep if hhead==1
+keep hid hhmem-employeep
+tempfile uno
+save `uno'					   
 
 
 /*
@@ -260,33 +304,56 @@ bys hid: egen disabledp = mean(disability)
 *==================
 use "$glss\g7sec5c.dta",clear
 *Does any member of the household own mobile phone?
-g mobileown = 2 - s5cq3
+egen mobileown = max(s5cq3==1), by(hid)
 label var mobileown "1 = Any member of the household owns a mobile phone, 0 otherwise"
+
+
+
 
 *Does any member of the household use internet? s5cq8a s5cq8b s5cq8c s5cq8d s5cq8f
 //g internetuse =2 - s7eq3d
 
-g internetuse =1 if  s5cq8a==1
-replace internetuse=1 if s5cq8b==1
-replace internetuse=1 if s5cq8c==1
-replace internetuse=1 if s5cq8d==1
-replace internetuse=1 if s5cq8f==1
-replace internetuse= 0 if internetuse==.
+g       x =1 if  s5cq8a==1
+replace x=1 if s5cq8b==1
+replace x=1 if s5cq8c==1
+replace x=1 if s5cq8d==1
+replace x=1 if s5cq8f==1
+replace x= 0 if x==.
+
+egen internetuse = max(x==1), by(hid)
 //replace internetuse = 0 if s7eq2d==2
 label var internetuse "1 = Any member of the household uses internet, 0 otherwise"
 
+duplicates drop hid, force
+keep hid mobileown internetuse
+
+tempfile sec5
+save `sec5'
+local files sec5 
+
 *Does the household own fixed telephone line at home?
 use "$glss/g7sec7.dta", clear
-g fixedphone = 2 - s7eq1a
+egen fixedphone = max(s7eq1a==1), by(hid)
 label var fixedphone "1 = Household owns a fixed telephone line, 0 otherwise"
+
+duplicates drop hid, force
+keep hid fixedphone
+tempfile sec7
+save `sec7'
+local files `files' sec7
 
 *Does any member of the household own desktop or laptop computers?
 use "$glss/g7sec5c", clear
-g pc = 1 if s5cq1b==1
-replace pc=0 if pc==.
+egen pc = max(s5cq1b==1), by(hid)
 label var pc "1 = Any member of the household owns desktop or laptop computers, 0 otherwise"
 
 
+keep hid pc
+duplicates drop hid, force
+
+tempfile sec5c
+save `sec5c'
+local files `files' sec5c
 
 *Section 3D (Mortality)
 *======================
@@ -294,12 +361,18 @@ label var pc "1 = Any member of the household owns desktop or laptop computers, 
 *Any live birth in the last 12 months?
 
 use "$glss/g7sec3d.dta", clear
+
 g birth = 1 if s3dq2==1
 bys hid: egen birth12mo = max(birth)
 recode birth12mo (. = 0)
 label var birth12mo "1 = Any live birth in the household in the last 12 months, 0 otherwise"
 
+duplicates drop hid, force
+keep hid birth12mo
 
+tempfile sec3d
+save `sec3d'
+local files `files' sec3d
 
 *Section 6 (Agricultural household)
 *==================================
@@ -309,6 +382,10 @@ replace aghouse = 1 if s6q1_b==1
 replace aghouse = 1 if s6q1_c==1
 replace aghouse=0 if aghouse==.
 label var aghouse "1 = Any household member engaged in agriculture, 0 otherwise"
+
+tempfile sec6a
+save `sec6a'
+local files `files' sec6a
 
 *Type of dwelling
 
@@ -393,9 +470,19 @@ tab toilet, gen(toilet)
 rename s7dq24b solidwaste
 tab solidwaste, gen(solidwaste)
 
+keep hid conventional - solidwaste5
 
 *Merge with expenditure data for per capita expenditure
 *======================================================
+merge 1:1 hid using `uno'
+	drop if _m==2 
+	drop _m
+	
+foreach x of local files{
+	merge 1:1 hid using ``x''
+		drop if _m==2
+		drop _m
+}
 
 merge m:1 hid using "$glssagg\15_GHA_2017_E_final.dta" 
 drop _me
@@ -410,4 +497,4 @@ g lnrpcexp = ln(rpcexp)
 //bys hid: keep if _n==1
 
 
-save "$glss\survey_2017", replace
+save "$outdata\survey_2017", replace
