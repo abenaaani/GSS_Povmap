@@ -192,6 +192,16 @@ label val schlvl schlvl
 label var schlvl "Highest level of schooling completed by the household head"
 tab schlvl if hhead==1, gen(head_schlvl)
 
+//educ variable to match census
+recode schlvl (3 4 = 3) (5=4), gen(educ4)
+lab def educ 1 "None or less than primary" 2 "Primary completed" 3 "JHS or middle completed" 4 "SHS completed or higher"
+
+lab val educ4 educ
+egen head_educ = max(educ4*(hhead==1)), by(hid)
+lab val head_educ educ
+tab head_educ, gen(head_educ)
+
+
 
 *Section 4 (Employment and occupation)
 *=====================================
@@ -401,14 +411,14 @@ label val wall wall
 tab wall, gen(wall)
 
 *Floor
-recode s7fq2 (1 = 1) (2 3 4 = 2)(5 6 7 8 9 = 3), gen(floor)
+recode s7fq2 (1 = 1) (2 3 4 = 2) (5 6 7 8 9 = 3), gen(floor)
 label var floor "Main construction material of floor"
 label define floor 1 "Earth/mud" 2 "Cement/concrete, stone, burnt bricks" 3 "Wood, vinyl tiles, ceramic/porcelain/granite/marble tiles,terrazo/terrazo tiles, other"
 label val floor floor
 tab floor, gen(floor)
 
 *Roof
-recode s7fq3 (1 7 8 = 1)(2 4 6 = 2)(3 = 3)(5 9 = 4) , gen(roof)
+recode s7fq3 (1 6 7 = 1) (2 4 8 = 2) (3 = 3) (5 9 = 4) , gen(roof)
 label var roof "Main construction material of roof"
 label define roof 1 "Mud/mud bricks/earth, bamboo, palm leaves/thatch(grass/ruffian)" 2 "Wood, slate/asbestos, roofing tile" 3 "Metal sheet" 4 "Concrete/Other"
 label val roof roof
@@ -453,9 +463,9 @@ label val water_general water2
 tab water_general, gen(water_general)
 
 *Main source of cooking fuel
-recode s7dq13 (2 = 1) (3 = 2) (4 = 3) (1 5/10 = 4), gen(fuel)
+recode s7dq19 (2 = 1) (3 = 2) (4 = 3) (5/10 = 4) (1=5), gen(fuel)
 label var fuel "Main source of cooking fuel"
-label define fuel 1 "Wood" 2 "Charcoal" 3 "Gas" 4 "Electricity, kerosense , crop residue, sawdust, animal waste, other"
+label define fuel 1 "Wood" 2 "Charcoal" 3 "Gas" 4 "Electricity, kerosense , crop residue, sawdust, animal waste, other" 5 "No Cook"
 label val fuel fuel
 tab fuel, gen(fuel)
 
@@ -466,11 +476,12 @@ label define toilet 1 "No facility" 2 "WC" 3 "Pit latrine" 4 "KVIP" 5 "Bucket/pa
 label val toilet toilet
 tab toilet, gen(toilet)
 
+/* Actually water disposal
 *Solid waste disposal
 rename s7dq24b solidwaste
 tab solidwaste, gen(solidwaste)
-
-keep hid conventional - solidwaste5
+*/
+keep hid conventional - toilet5
 
 *Merge with expenditure data for per capita expenditure
 *======================================================
