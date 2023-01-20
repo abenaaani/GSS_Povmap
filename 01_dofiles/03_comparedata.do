@@ -13,6 +13,7 @@ clear all
 *===============================================================================
 version 15
 if (lower("`c(username)'")=="wb378870"){
+	global main      "C:\Users\WB378870\OneDrive - WBG\000.EAWVP\0.Ghana\"
 	global outdata   "$main\6.SAE\1.data\"
 }
 if (lower("`c(username)'")=="jacqueline anum"){
@@ -121,18 +122,31 @@ groupfunction [aw=WTA_S], by(survey) mean(`myvar')
 
 /*
 VARIABLES to CHECK!
+-------------
+ABENA
 employed
 work
 laborforce
+--------------
+CHARLES
 malep
 depratio
-head ethnicity
+-------------
+UMU
+head_ethnicity
 head_marital
+-------------
+JACKIE
 head_schooling
 noschooling
+head_educ
+--------------
+TONY
 head_occ
 head_empstat
 aghouse
+--------------
+PATRICK
 wall3
 tenure3
 fuel2 fuel3
