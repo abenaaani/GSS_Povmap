@@ -1,24 +1,63 @@
-set more off
-clear all
 //do file to prepare census data for poverty mapping
-* same as collapse
+*same as collapse
 *ssc install groupfunction
 **************************************
 *This dofile prepares data from the census for
 * small area estimation
 *****************************************
+
 set more off
 clear all
+version 15
+
+*===============================================================================
+//Specify team paths
+*===============================================================================
+
 
 if (lower("`c(username)'")=="wb378870"){
 	global main      "C:\Users\WB378870\OneDrive - WBG\000.EAWVP\0.Ghana\"
-	global dpath "$main\0.Data\10.Census_2021"
+	global dpath "$main\0.Data\10.Census_2021\"
 	global outdata   "$main\6.SAE\1.data\"
 }
 if (lower("`c(username)'")=="jacqueline anum"){
 	global dpath  "C:\2021PHC\tabulation\"
 }
+if (lower("`c(username)'")=="umuhera braimah"){
+	global dpath  "C:\POVMAP\PHC_10%\"
+	global outdata "C:\POVMAP"
+}
+if (lower("`c(username)'")=="pagyekum"){
+	global dpath "C:\Desktop\Povmap\2021phcstata"
+	global outdata "C:\Desktop\Povmap\"
+}
+if (lower("`c(username)'")=="charles k. agbenu"){
+	global dpath   "C:\Users\CHARLES K. AGBENU\Documents\New Census Data"
+	global outdata "C:\Users\CHARLES K. AGBENU\Documents\Pov Output\Census output"
+}
+
+if (lower("`c(username)'")=="abena osei-akoto"){
+	global dpath  "C:\2021PHC_10%data\"
+	global outdata   "C:\2021PHC_10%data\povmap_work"
+}
+
+
+
 use "$dpath\defactopopn_10%_20221011d.dta" /*if _n<1000*/, clear
+
+	//Hierarchical ID
+	gen _x = 100+region
+	gen R  = string(_x)
+	drop _x
+	gen _x = 10000+distcode
+	gen D  = string(_x)
+	replace D = substr(D,2,.)
+	drop _x
+	gen _x = R+D 
+	gen double HID = real(_x)
+	drop _x R D
+	
+	
 
 	//We keep only households
 	keep if restype==1
@@ -313,6 +352,12 @@ label define toilet 1 "No facility" 2 "WC" 3 "Pit latrine" 4 "KVIP" 5 "Bucket/pa
 label val toilet toilet
 tab toilet, gen(toilet)
 //SOlid waste disposal
+
+keep if a11c==1
+sort nqid
+
+clonevar hid = nqid
+isid hid
 
 compress
 save "$outdata\census_2021", replace

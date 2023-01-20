@@ -1,9 +1,20 @@
+//do file to prepare SURVEY data for poverty mapping
+*same as collapse
+*ssc install groupfunction
+**************************************
+*This dofile prepares data from GLSS7 for
+* small area estimation
+*****************************************
 clear all
 set more off
 
-*global glss "C:\Users\wb425117\Dropbox\PREM\Ghana\GHA_dta\GLSS6\02_CLEANDATA"
-*global expenditure "C:\Users\wb425117\Dropbox\PREM\Ghana\GHA_dta\GLSS6\04_AGGDATA"
-*global census "C:\Users\wb425117\Dropbox\PREM\Ghana\GHA_dta\Census\Census"
+version 15
+
+*===============================================================================
+//Specify team paths
+*===============================================================================
+
+
 if (lower("`c(username)'")=="tony"){
 	global dpath "C:\Users\Tony\F-paper Dropbox\Anthony Krakah\PC\Desktop\POVERTY_MAPS\STATA_10%SAMPLE\" 
 }
@@ -13,10 +24,8 @@ if (lower("`c(username)'")=="wb378870"){
  
 //use "$dpath\defactopopn_10%_20221011d.dta" /*if _n<1000*/, clear
 if (lower("`c(username)'")=="tony"){
-	global glss "C:\Users\Tony\F-paper Dropbox\Anthony Krakah\PC\Desktop\OFFICE DESKTOP OLD\GLSS7\glss7data\data\glss7stata\g7PartA_1"
-	
-	global glssagg "C:\Users\Tony\F-paper Dropbox\Anthony Krakah\PC\Desktop\OFFICE DESKTOP OLD\GLSS7\glss7data\data\glss7stata\g7aggregates_1"
-	
+	global glss "C:\Users\Tony\F-paper Dropbox\Anthony Krakah\PC\Desktop\OFFICE DESKTOP OLD\GLSS7\glss7data\data\glss7stata\g7PartA_1"	
+	global glssagg "C:\Users\Tony\F-paper Dropbox\Anthony Krakah\PC\Desktop\OFFICE DESKTOP OLD\GLSS7\glss7data\data\glss7stata\g7aggregates_1"	
 	global outdata "$glss"
 }
 if (lower("`c(username)'")=="wb378870"){
@@ -26,6 +35,28 @@ if (lower("`c(username)'")=="wb378870"){
 	global glssagg   "$ghanadata\g7stata\g7aggregates\"
 	global outdata   "$main\6.SAE\1.data\"
 } 
+if (lower("`c(username)'")=="abena osei-akoto"){
+	global glss "C:\GLSS7\g7stata"
+	global glssagg "C:\GLSS7\g7stata\agg"
+	global outdata   "C:\2021PHC_10%data\povmap_work"
+}
+if (lower("`c(username)'")=="pagyekum"){
+	global glss "C:\Desktop\Povmap\glss7stata\g7PartA_1\"
+	global glssagg "C:\Desktop\Povmap\glss7stata\g7aggregates_1"
+	global outdata "C:\Desktop\Povmap"
+}
+if (lower("`c(username)'")=="charles k. agbenu"){
+	global glss "C:\Users\CHARLES K. AGBENU\Documents\glss7stata\g7PartA_1"
+	global glssagg "C:\Users\CHARLES K. AGBENU\Documents\glss7stata\g7aggregates_1"
+	global outdata "C:\Users\CHARLES K. AGBENU\Documents\Pov Output\GLSS output"
+}
+if (lower("`c(username)'")=="umuhera braimah"){
+    global glss "C:\POVMAP\glss7stata\g7PartA_1\"
+    global glssagg   "c:\POVMAP\glss7stata\g7aggregates\"
+    global outdata "C:\POVMAP"
+}
+
+
  
 
 *=======================================
@@ -64,6 +95,8 @@ drop _me
 
 //rename (s1q2 s1q5y s1q24) (sex age hhmem)
 rename (s1q24) (hhmem)
+keep if hhmem==1
+
 
 *Urban/rural
 g urban = (loc2==1)
@@ -83,7 +116,7 @@ label var head_male "Household head is male = 1, 0 otherwise"
 
 *Proportion of male in the household
 g male = 2 - sex
-bys hid: egen malep = mean(male) if hhmem==1
+bys hid: egen malep = mean(male)
 label var malep "Proportion of male members in the household"
 
 *Age of the household head
@@ -91,7 +124,7 @@ g head_age = age if hhead==1
 label var head_age "Age of the household head"
 
 *Average age in the household
-bys hid: egen age_avg = mean(age) if hhmem==1
+bys hid: egen age_avg = mean(age) 
 label var age_avg "Average age of household members"
 
 *Dependency ratio
@@ -109,7 +142,7 @@ g head_ghanaian = ghanaian if hhead==1
 label var head_ghanaian "Household head is Ghanaian = 1, 0 otherwise"
 
 *Proportion of household members who are Ghanaians
-bys hid: egen ghanaianp = mean(ghanaian) if hhmem==1
+bys hid: egen ghanaianp = mean(ghanaian)
 label var ghanaianp "Proportion of household members who are Ghanaians"
 
 *Ethnicity of the household head
@@ -504,8 +537,24 @@ drop _merge
 g rpcexp = HHEXP_N*100/(pindex*eqsc)
 g lnrpcexp = ln(rpcexp)
 
+//Generate Hierarchical ID
+	gen _x = 100+region
+	gen R  = string(_x)
+	drop _x
+	gen _x = 10000+district
+	gen D  = string(_x)
+	replace D = substr(D,2,.)
+	drop _x
+	gen _x = R+D 
+	gen double HID = real(_x)
+	drop _x R D
+
+
 //sort hid hhead
 //bys hid: keep if _n==1
-
+sort hid
+isid hid
+drop hid
+gen hid = _n
 
 save "$outdata\survey_2017", replace
