@@ -65,12 +65,12 @@ if (${dofirst}==1){
 	
 	groupfunction, mean(`myvar') by(survey)
 	
-	local dropphc
+	local dropphc work laborforce
 	foreach x of local myvar{
 		count if missing(`x') & survey==1
 		if r(N)>0 local dropphc `dropphc' `x'
 	} 
-	local dropglss
+	local dropglss work laborforce
 	foreach x of local myvar{
 		count if missing(`x') & survey==0
 		if r(N)>0 local dropglss `dropglss' `x'
@@ -117,8 +117,11 @@ append using "$outdata\survey_2017", gen(survey)
 		}
 	}
 	
+	tab survey
+	
 replace WTA_S = 1 if survey==0
-groupfunction [aw=WTA_S], by(survey) mean(`myvar')
+replace WTA_S_HHSIZE = hhsize if survey==0
+groupfunction [aw=WTA_S_HHSIZE], by(survey) mean(`myvar')
 
 /*
 VARIABLES to CHECK!
@@ -136,7 +139,7 @@ UMU
 head_ethnicity
 head_marital
 -------------
-JACKIE
+Samilia!!!
 head_schooling
 noschooling
 head_educ

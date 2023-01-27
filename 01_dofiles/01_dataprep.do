@@ -45,6 +45,7 @@ if (lower("`c(username)'")=="abena osei-akoto"){
 
 use "$dpath\defactopopn_10%_20221011d.dta" /*if _n<1000*/, clear
 
+
 	//Hierarchical ID
 	gen _x = 100+region
 	gen R  = string(_x)
@@ -88,10 +89,16 @@ label var hhsize "Household size"
 	//Avg. age in HH
 	egen age_avg = mean(p02), by(nqid)
 	label var age_avg "Average age of household members"
+	
 
 	//Dep ratio
-	egen depratio = mean(age <= 14 | age >= 65)	, by(nqid)
-	label var depratio "Dependency ratio"
+	egen w_age  = sum(inrange(p02,15,64)), by(nqid)
+	egen nw_age = sum(~(inrange(p02,15,64))), by(nqid)
+	
+	gen depratio = nw_age/w_age
+		label var depratio "Dependency ratio"
+		
+	drop w_age nw_age	
 	
 	//Generate nationality of head
 	egen head_nat = max((a11c==1 & p03a==1)), by(nqid)
@@ -179,7 +186,10 @@ label var hhsize "Household size"
 *===============================================================================
 
 *Labor market status of the household head
+
 tab econact if a11c==1, gen(head_employed)
+
+replace employed = econact==1 if !missing(econact)
 
 *Proportion of household members employed
 bys nqid: egen employedp = mean((econact==1)) 

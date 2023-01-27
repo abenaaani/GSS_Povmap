@@ -92,8 +92,11 @@ drop _me
 
 *Section 1: (Demographic variables)
 *==================================
+cap drop sex 
+cap drop age
+clonevar sex = s1q2
+clonevar age = s1q5y
 
-//rename (s1q2 s1q5y s1q24) (sex age hhmem)
 rename (s1q24) (hhmem)
 keep if hhmem==1
 
@@ -115,8 +118,7 @@ replace head_male = 0 if sex==2 & hhead==1
 label var head_male "Household head is male = 1, 0 otherwise"
 
 *Proportion of male in the household
-g male = 2 - sex
-bys hid: egen malep = mean(male)
+egen malep = mean(sex==1), by(hid)
 label var malep "Proportion of male members in the household"
 
 *Age of the household head
@@ -270,8 +272,9 @@ label val head_employed employment
 tab head_employed, gen(head_employed)
 */
 *Proportion of household members employed
-g employed_ = (employed==1)
-bys hid: egen employedp = mean(employed_)
+rename employed econact
+g employed = (econact==1) if !missing(econact) 
+bys hid: egen employedp = mean(econact==1)
 label var employedp "Proportion of household members employed" //Ideally change this to share of ADULTS employed
 //Head employment status
 g head_employed = employed if hhead==1
