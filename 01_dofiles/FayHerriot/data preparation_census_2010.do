@@ -201,6 +201,8 @@ label define schlvl 1 "None or less than primary" 2 "Primary" 3 "JSS/JHS" 4 "Mid
 label val schlvl schlvl
 label var schlvl "Highest level of schooling completed by the household head"
 tab schlvl if relationship==1, gen(head_schlvl)
+tab schlvl if age>14 & age<65, gen(workpop_schlvl_)
+
 
 drop school_attend 
 
@@ -406,7 +408,8 @@ local vars hhsize head_male male head_age age depratio head_ghanaian ghanaian he
 		head_birthplace1 - head_birthplace11 head_religion1 - head_religion4 christian head_maritalstatus1 - head_maritalstatus6 married ///
 		noschooling head_schlvl1 - head_schlvl5 employed /*head_occ1 - head_occ11*/ head_empstatus1 - head_empstatus9 employee ///
 		internetuse /*birth12mo surviverate */fixedphone pc aghouse conventional wall1 - wall3 floor1 - floor3 roof1 - roof4 tenure1 - tenure3 rooms bedrooms ///
-		lighting1 - lighting4 water_drinking1 - water_drinking4 water_general1 - water_general3 fuel1 - fuel4 toilet1 - toilet5 solidwaste1 - solidwaste4 /*numlivestock*/
+		lighting1 - lighting4 water_drinking1 - water_drinking4 water_general1 - water_general3 fuel1 - fuel4 toilet1 - toilet5 solidwaste1 - solidwaste4 ///
+		workpop_schlvl_1 - workpop_schlvl_5 /*numlivestock*/
 gen pop = 10
 groupfunction, mean(`vars') sum(pop) by(region district)
 

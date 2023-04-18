@@ -68,6 +68,26 @@ groupfunction [aw=WTA_S_HHSIZE], mean(fgt0) rawsum(WTA_S_HHSIZE) by(district clu
 groupfunction [aw=WTA_S_HHSIZE], mean(fgt0) count(clust) by(district)
 restore
 
+preserve
+//The below are for comparison to final FH estimates
+svy: proportion fgt0, over(region)
+	mata: fgt0 = st_matrix("e(b)")
+	mata: fgt0 = fgt0[(cols(fgt0)/2+1)..cols(fgt0)]'
+	mata: fgt0_var = st_matrix("e(V)")
+	mata: fgt0_var = diagonal(fgt0_var)[(cols(fgt0_var)/2+1)..cols(fgt0_var)]
+
+	groupfunction [aw=WTA_S_HHSIZE], mean(fgt0) rawsum(WTA_S_HHSIZE) by(region)
+	sort region
+	getmata dir_fgt0 = fgt0 dir_fgt0_var = fgt0_var
+
+	replace dir_fgt0_var = . if dir_fgt0_var==0
+	replace dir_fgt0 = . if missing(dir_fgt0_var)
+
+	save "$outdata\direct_glss7_region.dta", replace
+
+
+restore
+
 svy:proportion fgt0, over(district)
 
 mata: fgt0 = st_matrix("e(b)")
@@ -75,7 +95,9 @@ mata: fgt0 = fgt0[(cols(fgt0)/2+1)..cols(fgt0)]'
 mata: fgt0_var = st_matrix("e(V)")
 mata: fgt0_var = diagonal(fgt0_var)[(cols(fgt0_var)/2+1)..cols(fgt0_var)]
 
-groupfunction [aw=WTA_S_HHSIZE], mean(fgt0) by(region district)
+groupfunction [aw=WTA_S_HHSIZE], mean(fgt0) rawsum(WTA_S_HHSIZE) by(region district)
+
+
 
 sort district
 getmata dir_fgt0 = fgt0 dir_fgt0_var = fgt0_var
