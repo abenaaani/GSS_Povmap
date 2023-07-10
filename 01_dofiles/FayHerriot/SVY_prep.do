@@ -95,12 +95,18 @@ mata: fgt0 = fgt0[(cols(fgt0)/2+1)..cols(fgt0)]'
 mata: fgt0_var = st_matrix("e(V)")
 mata: fgt0_var = diagonal(fgt0_var)[(cols(fgt0_var)/2+1)..cols(fgt0_var)]
 
-groupfunction [aw=WTA_S_HHSIZE], mean(fgt0) rawsum(WTA_S_HHSIZE) by(region district)
+gen N=1 //Need the number of observation by district...for smoother variance function
+gen N_hhsize = hhsize
 
+//Number of EA by district
+bysort district clust: gen num_ea = 1 if _n==1
 
+groupfunction [aw=WTA_S_HHSIZE], mean(fgt0) rawsum(N WTA_S_HHSIZE N_hhsize num_ea) by(region district)
 
 sort district
 getmata dir_fgt0 = fgt0 dir_fgt0_var = fgt0_var
+
+gen zero = dir_fgt0 //original variable with direct estimates
 
 replace dir_fgt0_var = . if dir_fgt0_var==0
 replace dir_fgt0 = . if missing(dir_fgt0_var)
